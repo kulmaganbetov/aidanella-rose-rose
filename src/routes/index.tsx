@@ -29,13 +29,16 @@ export const Route = createFileRoute("/")({
 function Home() {
   const products = useStore((s) => s.products);
   const settings = useStore((s) => s.settings);
+  const loadCatalog = useStore((s) => s.loadCatalog);
   const [cat, setCat] = useState<Category | "all">("all");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    void loadCatalog();
+
     const t = setTimeout(() => setLoading(false), 500);
     return () => clearTimeout(t);
-  }, []);
+  }, [loadCatalog]);
 
   const visible = useMemo(() => filterByCategory(products, cat), [products, cat]);
 
