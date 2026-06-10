@@ -10,6 +10,7 @@ import {
   type SiteSettings,
 } from "@/types";
 import { formatPrice } from "@/utils";
+import { fileToCompressedDataUrl } from "@/lib/image";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -256,10 +257,9 @@ function ProductModal({
     },
   );
 
-  const handleImage = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = () => setForm({ ...form, image: reader.result as string });
-    reader.readAsDataURL(file);
+  const handleImage = async (file: File) => {
+    const dataUrl = await fileToCompressedDataUrl(file);
+    setForm((prev) => ({ ...prev, image: dataUrl }));
   };
 
   return (
@@ -325,7 +325,10 @@ function ProductModal({
           <input
             type="file"
             accept="image/*"
-            onChange={(e) => e.target.files?.[0] && handleImage(e.target.files[0])}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) void handleImage(file);
+            }}
             className="mt-2 text-xs"
           />
           {form.image && (
@@ -358,10 +361,11 @@ function SettingsForm({
 }) {
   const [form, setForm] = useState(settings);
 
-  const handleFile = (key: "logo" | "bgDesktop" | "bgMobile", file: File) => {
-    const reader = new FileReader();
-    reader.onload = () => setForm({ ...form, [key]: reader.result as string });
-    reader.readAsDataURL(file);
+  const handleFile = async (key: "logo" | "bgDesktop" | "bgMobile", file: File) => {
+    // Backgrounds can be a bit larger/higher quality than product thumbnails.
+    const maxDim = key === "logo" ? 512 : 1920;
+    const dataUrl = await fileToCompressedDataUrl(file, { maxDim });
+    setForm((prev) => ({ ...prev, [key]: dataUrl }));
   };
 
   return (
@@ -419,7 +423,10 @@ function SettingsForm({
           <input
             type="file"
             accept="image/*"
-            onChange={(e) => e.target.files?.[0] && handleFile(key, e.target.files[0])}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) void handleFile(key, file);
+            }}
             className="text-xs"
           />
         </div>
