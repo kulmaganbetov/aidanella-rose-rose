@@ -25,7 +25,7 @@ function Home() {
   const [cat, setCat] = useState<Category | "all">("all");
   const [loading, setLoading] = useState(true);
 
-  useMemo(() => {
+  useEffect(() => {
     const t = setTimeout(() => setLoading(false), 500);
     return () => clearTimeout(t);
   }, []);
